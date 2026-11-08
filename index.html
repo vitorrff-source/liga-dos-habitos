@@ -1607,7 +1607,6 @@ function monCard(m, inParty) {
     <div class="row">
       ${inParty ? `<button class="btn sm" data-out="${m.id}" ${game.equipe.length > 1 ? "" : "disabled"}>Tirar da equipe</button>${game.equipe[0] !== m.id ? `<button class="btn sm" data-lead="${m.id}">Tornar líder</button>` : `<span class="rchip">Líder</span>`}`
         : `<button class="btn sm" data-in="${m.id}" ${game.equipe.length < CFG.equipe_max ? "" : "disabled"}>${game.equipe.length < CFG.equipe_max ? "Pôr na equipe" : "Equipe cheia"}</button>`}
-      ${(m.hp < st[0] || m.cond) ? `<button class="btn sm" data-heal="${m.id}" ${pts("alimentacao") ? "" : "disabled"}>Curar (1 ${ptIcon("alimentacao", 14)})</button>` : ""}
       ${highlight() && highlight().id === m.id ? `<span class="rchip">Em destaque</span>` : `<button class="btn sm" data-star="${m.id}">Destacar no Início</button>`}
       ${canSac ? `<button class="btn sm" data-sac="${m.id}">Sacrificar</button>` : ""}
     </div>
@@ -1617,7 +1616,9 @@ function viewEquipe() {
   if (!game.mons.length) return `<section class="card"><h2>Ainda sem monstrinhos</h2><p class="lead">Escolha seu parceiro no Início.</p></section>`;
   const p = partyMons(), res = reserveMons().sort((a, b) => b.lvl - a.lvl);
   const hasDupes = D.species.some(s => game.mons.filter(m => m.sp === s.id && !m.mythic).length > 1);
+  const nh = hurt().length;
   return `<div class="col">
+    <section class="card"><div class="row between"><div><h2 style="margin:0">Curar todos</h2><p class="small muted" style="margin:4px 0 0">${nh ? `${nh} ${nh === 1 ? "monstrinho precisa" : "monstrinhos precisam"} de cuidados. Recupera toda a vida e remove condições de todos.` : "Todos os monstrinhos estão saudáveis."}</p></div><button class="btn primary" id="healAll" ${nh && pts("alimentacao") ? "" : "disabled"}>Curar (1 ${ptIcon("alimentacao", 16)})</button></div></section>
     <section><div class="row between" style="margin-bottom:10px"><h2>Na equipe</h2><span class="small muted">${p.length} de ${CFG.equipe_max} · o líder entra primeiro na batalha</span></div>
     <div class="mons">${p.map(m => monCard(m, true)).join("")}</div></section>
   </div>`;
@@ -1764,7 +1765,7 @@ function bind() {
   $$("[data-in]").forEach(b => b.onclick = () => { game.equipe.push(+b.dataset.in); saveGame(); render(); });
   $$("[data-out]").forEach(b => b.onclick = () => { game.equipe = game.equipe.filter(id => id !== +b.dataset.out); saveGame(); render(); });
   $$("[data-lead]").forEach(b => b.onclick = () => { const id = +b.dataset.lead; game.equipe = [id, ...game.equipe.filter(x => x !== id)]; saveGame(); render(); });
-  $$("[data-heal]").forEach(b => b.onclick = () => healMon(getMon(+b.dataset.heal)));
+  const ha = $("#healAll"); if (ha) ha.onclick = healAll;
   $$("[data-sac]").forEach(b => b.onclick = () => sacrificeStart([+b.dataset.sac]));
   $$("[data-use]").forEach(b => b.onclick = () => useItemStart(b.dataset.use));
   $$("[data-date]").forEach(b => b.onclick = () => { calSel = new Date(b.dataset.date + "T00:00"); render(); });
@@ -1971,6 +1972,14 @@ function askMove(i) {
     saveGame(); closeSheet(); setTab("inicio");
   });
   $("#cancel").onclick = closeSheet;
+}
+/* o ponto de Alimentação cura todos os monstrinhos de uma vez (equipe e reserva) */
+const hurt = () => game.mons.filter(m => m.hp < maxHp(m) || m.cond);
+function healAll() {
+  const list = hurt(); if (!list.length || !spendPoint("alimentacao")) return;
+  list.forEach(m => { m.hp = maxHp(m); m.cond = null; });
+  addLog(list.length === 1 ? `${SP[list[0].sp].n} foi curado.` : `Todos os monstrinhos foram curados.`); saveGame(); closeSheet();
+  toast(list.length === 1 ? `${SP[list[0].sp].n} está novo em folha.` : "Todos os monstrinhos estão novos em folha.");
 }
 function healMon(m) {
   if (!m || !spendPoint("alimentacao")) return;
