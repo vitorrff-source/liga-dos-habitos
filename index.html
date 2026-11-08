@@ -1358,7 +1358,7 @@ function tutSteps() {
     { id: "bat1", say: "Hora da batalha! Quem vai batalhar com você é o próprio <b>professor</b>, usando o Corvinho dele contra o monstrinho que você capturou. Toque em <b>Batalhar</b> (custa 1 ponto de Exercício).", target: () => $("#actBattle2"), wait: () => sheetOpen() && !!$("#sheetGo") },
     { id: "bat2", say: "Esse é o seu oponente: o Professor Tomás. Toque em <b>Desafiar</b>.", target: () => $("#sheetGo"), ensure: battleSheet, wait: () => !!game.batalha },
     { id: "bat3", noskip: true, nomask: true, bubble: "top", say: "Escolha um golpe! Cada golpe tem um tipo, e alguns são mais fortes contra certos tipos.", target: () => $("#acts"), wait: () => !game.batalha, delay: 600 },
-    { id: "bat4", say: "Fim da batalha! Quem lutou ganhou experiência e você ganhou moedas.", target: () => $("#sheet #done") || $("#sheet #skipLearn"), wait: () => !sheetOpen() },
+    { id: "bat4", say: "Fim da batalha! Toda a equipe ganhou experiência e você ganhou moedas.", target: () => $("#sheet #done") || $("#sheet #skipLearn"), wait: () => !sheetOpen() },
     { id: "ferido", mid: true, ok: true, say: "Seu monstrinho se machucou. A vida <b>não volta sozinha</b>: você cura com itens ou gastando pontos de Alimentação. Vamos comprar um item de cura na loja.",
       enter: () => { const m = partyMons()[0]; if (m) m.hp = Math.max(1, Math.floor(maxHp(m) * .35)); } },
     { id: "loja1", tab: "inicio", say: "Toque em <b>acessar loja</b>. Entrar custa 1 ponto de Skincare.", target: () => $("#goShop"), wait: () => sheetOpen() && !!$("#enter") },
@@ -2353,8 +2353,8 @@ function endBattle(win, gaveUp = false) {
     if (!v.includes(t.id)) v.push(t.id);
     lines.push({ t: `Você venceu ${t.n} e ganhou ${money(coins)} moedas.` });
     if (!bt.rematch && t.item && IT[t.item]) { game.inv[t.item] = (game.inv[t.item] || 0) + 1; lines.push({ t: `${t.n} te deu: ${IT[t.item].n}.` }); }
-    lines.push({ t: `Quem lutou ganhou ${money(B.xpPool)} de experiência.` });
-    [...B.part].map(getMon).filter(Boolean).forEach(m => applyXP(m, B.xpPool, lines, learnQueue));
+    lines.push({ t: `Toda a equipe ganhou ${money(B.xpPool)} de experiência.` });
+    B.mine.map(f => getMon(f.ref.id)).filter(Boolean).forEach(m => applyXP(m, B.xpPool, lines, learnQueue));   /* a equipe inteira recebe o XP, não só quem lutou */
     if (routeCleared(bt.route) && !bt.rematch && v.length === trainersOf(bt.route).length) {
       lines.push({ t: bt.route < ROUTES.length - 1 ? `${ROUTES[bt.route].n} concluída! ${ROUTES[bt.route + 1].n} está liberada no mapa.` : "Você venceu a Mestra da Liga!" });
       addLog(`${ROUTES[bt.route].n} concluída.`);
