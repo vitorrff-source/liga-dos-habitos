@@ -1481,7 +1481,8 @@ const sceneStyle = ri0 => RIMG[ROUTES[ri0].id] ? `background-image:url(${RIMG[RO
 function hpBar(m) { const mx = maxHp(m), p = clamp(m.hp / mx * 100, 0, 100); return `<div class="hp"><i class="${p < 25 ? "low" : p < 50 ? "mid" : ""}" style="width:${p}%"></i></div>`; }
 function condTag(m) { return isDown(m) ? `<span class="cond desmaiado">Desmaiado</span>` : m.cond ? `<span class="cond ${m.cond}">${COND_NAME[m.cond]}</span>` : ""; }
 
-function highlight() { return getMon(game.destaque) || partyMons()[0] || game.mons[0]; }
+/* o líder da equipe é o monstrinho em destaque no Início */
+function highlight() { return partyMons()[0] || game.mons[0]; }
 function homeBg(ri0) {
   const r = ROUTES[ri0];
   if (RIMG[r.id]) return `background-image:url(${RIMG[r.id]})`;
@@ -1533,7 +1534,7 @@ function viewInicio() {
       <div class="row3">${st.map(s => `<button data-starter="${s.id}">${art(s.id)}${esc(s.n)}</button>`).join("")}</div></div>`;
   } else {
     const p = clamp(m.hp / maxHp(m) * 100, 0, 100);
-    stage = `<div class="stage">${trainerImg()}<button class="buddy" id="pickBuddy" title="Trocar destaque">
+    stage = `<div class="stage">${trainerImg()}<button class="buddy" id="pickBuddy" title="Trocar o líder">
       <span class="tag glass"><span class="tagline">${esc(SP[m.sp].n)}, Nv ${m.lvl}</span><span class="hp"><i class="${p < 25 ? "low" : p < 50 ? "mid" : ""}" style="width:${p}%"></i></span></span>
       ${art(m.sp, true)}</button></div>`;
   }
@@ -1603,7 +1604,6 @@ function monCard(m, inParty) {
     <div class="row">
       ${inParty ? `<button class="btn sm" data-out="${m.id}" ${game.equipe.length > 1 ? "" : "disabled"}>Tirar da equipe</button>${game.equipe[0] !== m.id ? `<button class="btn sm" data-lead="${m.id}">Tornar líder</button>` : `<span class="rchip">Líder</span>`}`
         : `<button class="btn sm" data-in="${m.id}" ${game.equipe.length < CFG.equipe_max ? "" : "disabled"}>${game.equipe.length < CFG.equipe_max ? "Pôr na equipe" : "Equipe cheia"}</button>`}
-      ${highlight() && highlight().id === m.id ? `<span class="rchip">Em destaque</span>` : `<button class="btn sm" data-star="${m.id}">Destacar no Início</button>`}
       ${canSac ? `<button class="btn sm" data-sac="${m.id}">Sacrificar</button>` : ""}
     </div>
   </div></article>`;
@@ -1649,7 +1649,6 @@ function monSheet(id) {
   on("[data-out]", () => { game.equipe = game.equipe.filter(x => x !== id); feito(`${SP[m.sp].n} foi para a reserva.`); });
   on("[data-lead]", () => { game.equipe = [id, ...game.equipe.filter(x => x !== id)]; feito("Novo líder da equipe."); });
   on("[data-in]", () => { if (game.equipe.length < CFG.equipe_max) game.equipe.push(id); feito(`${SP[m.sp].n} entrou na equipe.`); });
-  on("[data-star]", () => { game.destaque = id; feito("Destaque atualizado."); });
   on("[data-sac]", () => sacrificeStart([id]));
 }
 function viewMochila() {
@@ -1815,7 +1814,7 @@ function bind() {
   g("openMyths", mythicsSheet);
   g("actMark", markSheet);
   g("actBattle2", battleSheet);
-  g("pickBuddy", () => picker("Destaque do Início", "Quem aparece ao lado do seu personagem?", m => { game.destaque = m.id; saveGame(); closeSheet(); }));
+  g("pickBuddy", () => picker("Líder da equipe", "O líder entra primeiro nas batalhas e aparece ao lado do seu personagem.", m => { game.equipe = [m.id, ...game.equipe.filter(x => x !== m.id)]; saveGame(); closeSheet(); }, m => game.equipe.includes(m.id), partyMons()));
   g("hcapToggle", () => { homeCapOpen = !homeCapOpen; render(); });
   $$("[data-seltr]").forEach(b => b.onclick = () => { selTr = b.dataset.seltr; render(); });
   g("resumeBattle", openBattle);
