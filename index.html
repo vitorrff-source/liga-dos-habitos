@@ -516,6 +516,7 @@ select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid 
 
 /* Equipe: miniaturas, reserva e sacrifício em lote */
 .eqbar { display: flex; gap: 8px; align-items: center; }
+.eqtitulo { text-align: right; margin: 4px 2px -2px; font-size: 1.15rem; }
 .eqbar .btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .seg { display: inline-flex; background: rgba(255,255,255,.14); border-radius: 999px; padding: 3px; gap: 2px; }
 .seg button { border: 0; background: transparent; color: inherit; padding: 7px 14px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; }
@@ -1636,6 +1637,7 @@ function viewEquipe() {
     <div class="eqbar"><button class="btn" id="healAll" ${nh && pts("alimentacao") ? "" : "disabled"} title="${nh ? (pts("alimentacao") ? "Cura todos os monstrinhos (1 ponto de Alimentação)" : "Sem pontos de Alimentação") : "Todos os monstrinhos estão saudáveis"}">Curar ${ptIcon("alimentacao", 16)}</button>
       <button class="btn" id="eqRes">Reserva${res.length ? ` (${res.length})` : ""}</button>
       <button class="btn" id="bulkSac" ${grupos.length ? "" : "disabled"} title="${grupos.length ? "Escolher os repetidos a sacrificar" : "Você não tem monstrinhos repetidos"}">Sacrificar${sobras ? ` (${sobras})` : ""}</button></div>
+    <h2 class="eqtitulo">Sua equipe</h2>
     <div class="mgrid">${p.map(miniMon).join("")}</div>
   </div>`;
 }
