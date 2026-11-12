@@ -1465,7 +1465,7 @@ function render() {
   const v = $("#view");
   if (!gameLoaded && tab !== "calendario") v.innerHTML = `<div class="page"><section class="card"><h2>Carregando sua aventura…</h2></section></div>`;
   else if (tab === "inicio") v.innerHTML = viewInicio(true);
-  else v.innerHTML = `<div class="page rotasbg">${gameLoaded ? `<div class="rbg" style="${homeBg(game.rota)}"></div>` : ""}${hudBar()}${tab === "rotas" || tab === "mochila" ? "" : `<div class="place ptitle"><h1>${PAGE_TITLE[tab]}</h1></div>`}${{ rotas: viewRotas, equipe: viewEquipe, mochila: viewMochila, colecao: viewColecao, calendario: viewCalendario }[tab]()}${tab === "colecao" ? `<button class="btn mythbtn" id="openMyths"><span class="mstar" aria-hidden="true">✦</span>Missões Especiais<span class="mstar s2" aria-hidden="true">✦</span></button>` : ""}</div>`;
+  else v.innerHTML = `<div class="page rotasbg">${gameLoaded ? `<div class="rbg" style="${homeBg(game.rota)}"></div>` : ""}${hudBar()}${tab === "rotas" || tab === "mochila" || tab === "equipe" ? "" : `<div class="place ptitle"><h1>${PAGE_TITLE[tab]}</h1></div>`}${{ rotas: viewRotas, equipe: viewEquipe, mochila: viewMochila, colecao: viewColecao, calendario: viewCalendario }[tab]()}${tab === "colecao" ? `<button class="btn mythbtn" id="openMyths"><span class="mstar" aria-hidden="true">✦</span>Missões Especiais<span class="mstar s2" aria-hidden="true">✦</span></button>` : ""}</div>`;
   bind();
 }
 const PAGE_TITLE = { rotas: "Rotas", equipe: "Equipe", mochila: "Mochila", colecao: "Coleção", calendario: "Calendário" };
@@ -1609,13 +1609,12 @@ function monCard(m, inParty) {
     <div class="xp" title="Experiência"><i style="width:${m.lvl >= CFG.nivel_max ? 100 : Math.round(m.xp / need(m.lvl) * 100)}%"></i></div>
     <div class="moves">${m.moves.map(id => `<span class="mv" style="--tc:${TYPE_COL[MV[id].t]}">${esc(MV[id].n)}</span>`).join("")}</div>
     <div class="row">
-      ${inParty ? `<button class="btn sm" data-out="${m.id}" ${game.equipe.length > 1 ? "" : "disabled"}>Tirar da equipe</button>${game.equipe[0] !== m.id ? `<button class="btn sm" data-lead="${m.id}">Tornar líder</button>` : `<span class="rchip">Líder</span>`}`
-        : `<button class="btn sm" data-in="${m.id}" ${game.equipe.length < CFG.equipe_max ? "" : "disabled"}>${game.equipe.length < CFG.equipe_max ? "Pôr na equipe" : "Equipe cheia"}</button>`}
+      ${inParty ? `<button class="btn sm" data-out="${m.id}" ${game.equipe.length > 1 ? "" : "disabled"}>Enviar para a reserva</button>${game.equipe[0] !== m.id ? `<button class="btn sm" data-lead="${m.id}">Tornar líder</button>` : `<span class="rchip">Líder</span>`}`
+        : `<button class="btn sm" data-in="${m.id}">Trazer para a equipe</button>`}
       ${canSac ? `<button class="btn sm" data-sac="${m.id}">Sacrificar</button>` : ""}
     </div>
   </div></article>`;
 }
-let eqAba = "equipe";
 const varSoma = m => (m.var || []).reduce((a, b) => a + b, 0);
 /* grupos de espécies repetidas (os míticos ficam de fora) */
 const dupGroups = () => D.species.map(sp => game.mons.filter(m => m.sp === sp.id && !m.mythic && sp.rar !== "mitico")).filter(l => l.length > 1);
@@ -1629,33 +1628,52 @@ function miniMon(m) {
 }
 function viewEquipe() {
   if (!game.mons.length) return `<section class="card"><h2>Ainda sem monstrinhos</h2><p class="lead">Escolha seu parceiro no Início.</p></section>`;
-  const p = partyMons(), res = reserveMons().sort((a, b) => b.lvl - a.lvl);
+  const p = partyMons(), res = reserveMons();
   const grupos = dupGroups(), sobras = grupos.reduce((a, l) => a + l.length - 1, 0);
   const nh = hurt().length;
-  const lista = eqAba === "reserva"
-    ? `<div class="row between" style="margin-bottom:10px"><h2>Reserva</h2><span class="small muted">${res.length} ${res.length === 1 ? "monstrinho" : "monstrinhos"} · toque para ver e pôr na equipe</span></div>
-       ${res.length ? `<div class="mgrid">${res.map(miniMon).join("")}</div>` : `<section class="card"><p class="lead" style="margin:0">Nenhum monstrinho na reserva. Os capturados que não cabem na equipe ficam aqui.</p></section>`}`
-    : `<div class="row between" style="margin-bottom:10px"><h2>Na equipe</h2><span class="small muted">${p.length} de ${CFG.equipe_max} · o líder entra primeiro</span></div>
-       <div class="mgrid">${p.map(miniMon).join("")}</div>`;
   return `<div class="col">
     <section class="card"><div class="row between"><div><h2 style="margin:0">Curar todos</h2><p class="small muted" style="margin:4px 0 0">${nh ? `${nh} ${nh === 1 ? "monstrinho precisa" : "monstrinhos precisam"} de cuidados. Recupera toda a vida e remove condições de todos.` : "Todos os monstrinhos estão saudáveis."}</p></div><button class="btn primary" id="healAll" ${nh && pts("alimentacao") ? "" : "disabled"}>Curar (1 ${ptIcon("alimentacao", 16)})</button></div></section>
-    <div class="eqbar"><div class="seg" role="tablist"><button id="eqTeam" role="tab" aria-selected="${eqAba === "equipe"}" class="${eqAba === "equipe" ? "on" : ""}">Equipe<small>${p.length}/${CFG.equipe_max}</small></button><button id="eqRes" role="tab" aria-selected="${eqAba === "reserva"}" class="${eqAba === "reserva" ? "on" : ""}">Reserva<small>${res.length}</small></button></div>
+    <div class="eqbar"><button class="btn" id="eqRes">Reserva${res.length ? ` (${res.length})` : ""}</button>
       <button class="btn" id="bulkSac" ${grupos.length ? "" : "disabled"} title="${grupos.length ? "Escolher os repetidos a sacrificar" : "Você não tem monstrinhos repetidos"}">Sacrificar${sobras ? ` (${sobras})` : ""}</button></div>
-    <section>${lista}</section>
+    <div class="mgrid">${p.map(miniMon).join("")}</div>
   </div>`;
 }
-/* Menu completo de um monstrinho (aberto ao tocar na miniatura) */
-function monSheet(id) {
-  const m = getMon(id); if (!m) return;
-  const inParty = game.equipe.includes(id);
-  openSheet(`<div class="row between"><h2>Detalhes</h2><button class="btn sm" id="cancel">Fechar</button></div>${monCard(m, inParty).replace('class="card mon"', 'class="mon"')}`);
+/* Reserva: janela com os monstrinhos que não estão na equipe; tocar em um abre o menu dele (com "Trazer para a equipe") */
+function reservaSheet() {
+  const res = reserveMons().sort((a, b) => b.lvl - a.lvl);
+  openSheet(`<div class="row between"><h2>Reserva</h2><button class="btn sm" id="cancel">Fechar</button></div>
+    ${res.length ? `<p class="small muted" style="margin:0">Toque em um monstrinho para trazê-lo para a equipe.</p><div class="bulklist"><div class="mgrid">${res.map(miniMon).join("")}</div></div>` : `<p class="lead" style="margin:0">Nenhum monstrinho na reserva. Os capturados que não cabem na equipe ficam aqui.</p>`}`);
   $("#sheet").classList.add("marcar");
   $("#cancel").onclick = closeSheet;
+  $$("#sheet [data-open]").forEach(b => b.onclick = () => monSheet(+b.dataset.open, reservaSheet));
+}
+/* Equipe cheia: o jogador escolhe quem vai para a reserva no lugar do monstrinho que está entrando */
+function trocaSheet(id, voltar) {
+  const novo = getMon(id);
+  openSheet(`<h2>Equipe cheia</h2><p class="muted">Escolha quem vai para a reserva para dar lugar a <b>${esc(SP[novo.sp].n)}</b>, ou cancele.</p>
+    <div class="picker">${partyMons().map(m => monRow(m, "data-swap")).join("")}</div>
+    <div class="row"><button class="btn" id="cancel">Cancelar</button></div>`);
+  $("#sheet").classList.add("marcar");
+  $("#cancel").onclick = () => monSheet(id, voltar);
+  $$("#sheet [data-swap]").forEach(b => b.onclick = () => {
+    const sai = +b.dataset.swap, i = game.equipe.indexOf(sai);
+    if (i < 0) return;
+    game.equipe[i] = id; saveGame(); closeSheet(); toast(`${SP[novo.sp].n} entrou na equipe e ${SP[getMon(sai).sp].n} foi para a reserva.`);
+  });
+}
+/* Menu completo de um monstrinho (aberto ao tocar na miniatura) */
+function monSheet(id, voltar) {
+  const m = getMon(id); if (!m) return;
+  const inParty = game.equipe.includes(id);
+  openSheet(`<div class="row between"><h2>Detalhes</h2><span class="row" style="gap:6px">${voltar ? `<button class="btn sm" id="back">Voltar</button>` : ""}<button class="btn sm" id="cancel">Fechar</button></span></div>${monCard(m, inParty).replace('class="card mon"', 'class="mon"')}`);
+  $("#sheet").classList.add("marcar");
+  $("#cancel").onclick = closeSheet;
+  if (voltar) $("#back").onclick = () => voltar();
   const on = (sel, fn) => { const el = $("#sheet " + sel); if (el) el.onclick = fn; };
   const feito = msg => { saveGame(); closeSheet(); if (msg) toast(msg); };
   on("[data-out]", () => { game.equipe = game.equipe.filter(x => x !== id); feito(`${SP[m.sp].n} foi para a reserva.`); });
   on("[data-lead]", () => { game.equipe = [id, ...game.equipe.filter(x => x !== id)]; feito("Novo líder da equipe."); });
-  on("[data-in]", () => { if (game.equipe.length < CFG.equipe_max) game.equipe.push(id); feito(`${SP[m.sp].n} entrou na equipe.`); });
+  on("[data-in]", () => { if (game.equipe.length < CFG.equipe_max) { game.equipe.push(id); feito(`${SP[m.sp].n} entrou na equipe.`); } else trocaSheet(id, voltar); });
   on("[data-sac]", () => sacrificeStart([id]));
 }
 function viewMochila() {
@@ -1800,8 +1818,7 @@ function bind() {
   const omb = $("#openMap"); if (omb) omb.onclick = openMap;
   $$("[data-go]").forEach(b => b.onclick = () => askMove(+b.dataset.go));
   $$("[data-open]").forEach(b => b.onclick = () => monSheet(+b.dataset.open));
-  g("eqTeam", () => { eqAba = "equipe"; render(); });
-  g("eqRes", () => { eqAba = "reserva"; render(); });
+  g("eqRes", reservaSheet);
   const ha = $("#healAll"); if (ha) ha.onclick = healAll;
   $$("[data-use]").forEach(b => b.onclick = () => useItemStart(b.dataset.use));
   $$("[data-date]").forEach(b => b.onclick = () => { calSel = new Date(b.dataset.date + "T00:00"); render(); });
