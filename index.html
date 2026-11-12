@@ -1460,7 +1460,7 @@ function render() {
   const v = $("#view");
   if (!gameLoaded && tab !== "calendario") v.innerHTML = `<div class="page"><section class="card"><h2>Carregando sua aventura…</h2></section></div>`;
   else if (tab === "inicio") v.innerHTML = viewInicio(true);
-  else v.innerHTML = `<div class="page rotasbg">${gameLoaded ? `<div class="rbg" style="${homeBg(game.rota)}"></div>` : ""}${hudBar()}${tab === "rotas" ? "" : `<div class="place ptitle"><h1>${PAGE_TITLE[tab]}</h1></div>`}${{ rotas: viewRotas, equipe: viewEquipe, mochila: viewMochila, colecao: viewColecao, calendario: viewCalendario }[tab]()}${tab === "colecao" ? `<button class="btn mythbtn" id="openMyths"><span class="mstar" aria-hidden="true">✦</span>Missões Especiais<span class="mstar s2" aria-hidden="true">✦</span></button>` : ""}</div>`;
+  else v.innerHTML = `<div class="page rotasbg">${gameLoaded ? `<div class="rbg" style="${homeBg(game.rota)}"></div>` : ""}${hudBar()}${tab === "rotas" || tab === "mochila" ? "" : `<div class="place ptitle"><h1>${PAGE_TITLE[tab]}</h1></div>`}${{ rotas: viewRotas, equipe: viewEquipe, mochila: viewMochila, colecao: viewColecao, calendario: viewCalendario }[tab]()}${tab === "colecao" ? `<button class="btn mythbtn" id="openMyths"><span class="mstar" aria-hidden="true">✦</span>Missões Especiais<span class="mstar s2" aria-hidden="true">✦</span></button>` : ""}</div>`;
   bind();
 }
 const PAGE_TITLE = { rotas: "Rotas", equipe: "Equipe", mochila: "Mochila", colecao: "Coleção", calendario: "Calendário" };
