@@ -538,6 +538,8 @@ select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid 
 .sheet.marcar .pick.sel { border-color: #ff7a6b; background: rgba(255,90,70,.18); }
 .pick .ck { color: #ff9a8d; }
 .pick .ck { font-size: 12px; font-weight: 700; white-space: nowrap; }
+.lojacard { min-height: 170px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.lojacard .btn { display: inline-flex; align-items: center; gap: 6px; }
 .rsec { padding: 14px; }
 .rsec + .rsec { margin-top: 12px; }
 .rhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -1655,8 +1657,8 @@ function viewMochila() {
   const owned = Object.entries(game.inv).filter(([id, q]) => q > 0 && IT[id]);
   const useable = id => !ORBS.includes(id);
   return `<div class="grid2"><div class="col">
-    <section class="card"><h2>Loja</h2><p class="lead">${game.loja ? "A loja está aberta. Compre quantos itens quiser." : "Entrar gasta 1 Skincare. Lá dentro, compre quantos itens quiser."}</p>
-      <div class="row between"><span class="progress" style="margin:0"><span><b>${money(game.dinheiro)}</b>moedas</span><span><b>${money(game.conq.gasto)}</b>gastas</span></span><button class="btn primary" id="actShop" ${game.loja || pts("skincare") ? "" : "disabled"}>${game.loja ? "Voltar à loja" : "Entrar (1 Skincare)"}</button></div></section>
+    <section class="card lojacard" style="background: linear-gradient(rgba(6,9,8,.45), rgba(6,9,8,.7)), url(loja-entrada.webp) center / cover no-repeat;"><h2>Loja</h2>
+      <button class="btn primary" id="actShop" ${game.loja || pts("skincare") ? "" : "disabled"}>${game.loja ? "Voltar à loja" : `Entrar na loja 1 ${ptIcon("skincare", 16)}`}</button></section>
   </div><div class="col">
     <section class="card"><h2>Mochila</h2><p class="lead">Itens de cura, atributo, manuais e pedras se usam aqui sem gastar ponto. Orbes se abrem em Capturar, no Início.</p>
       <div class="items">${owned.length ? owned.map(([id, q]) => `<div class="item"><div><b>${esc(IT[id].n)} <span class="qty">×${q}</span></b><small>${esc(IT[id].d)}</small></div>${useable(id) ? `<button class="btn sm" data-use="${id}">Usar</button>` : `<span class="rchip">Orbe</span>`}</div>`).join("") : `<p class="muted">Mochila vazia.</p>`}</div>
