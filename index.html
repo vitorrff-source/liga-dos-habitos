@@ -202,6 +202,8 @@ h1 { font-weight: 800; font-size: clamp(1.7rem, 4vw, 2.3rem); line-height: 1.05;
 /* mochila e loja */
 .items { display: grid; gap: 8px; }
 .item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); }
+.item.hasimg { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.item .itemimg, .item .orbimg { width: 44px; height: 44px; object-fit: contain; }
 .item b { display: block; }
 .item small { color: var(--muted); font-size: 12px; }
 .qty { font-family: var(--display); font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -738,6 +740,9 @@ function seeded(str) { let h = 1779033703 ^ str.length; for (let i = 0; i < str.
 const chip = t => `<span class="chip" style="background:${TYPE_COL[t] || "#ddd"}">${TYPE_NAME[t] || t}</span>`;
 const chips = ts => `<span class="chips">${ts.map(chip).join("")}</span>`;
 const TICK = '<svg viewBox="0 0 14 14" fill="none"><path d="M2.5 7.5l3 3 6-7" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* ícones dos itens: orbes têm imagem própria; os demais usam claude/imagens/itens/<id>.webp quando existir (o build.py lista os que existem) */
+const ITEM_IMG = new Set([]);
+const itemIcon = (id, px = 44) => ORBS.includes(id) ? orbSvg(id, px) : ITEM_IMG.has(id) ? `<img class="itemimg" src="itens/${id}.webp" width="${px}" height="${px}" alt="" aria-hidden="true">` : "";
 function orbSvg(id, size = 22) {
   if (id === "orbe" || id === "orbe-raro") return `<img class="orbimg" src="${id}.webp" width="${size}" height="${size}" alt="" aria-hidden="true">`;
   const col = { "orbe": ["#5fb98a", "#e8eeea"], "orbe-raro": ["#e0642c", "#f2c13b"] }[id] || ["#5fb98a", "#e8eeea"];
@@ -1661,7 +1666,7 @@ function viewMochila() {
       <button class="btn primary" id="actShop" ${game.loja || pts("skincare") ? "" : "disabled"}>${game.loja ? "Voltar à loja" : `Entrar na loja 1 ${ptIcon("skincare", 16)}`}</button></section>
   </div><div class="col">
     <section class="card"><h2>Mochila</h2><p class="lead">Itens de cura, atributo, manuais e pedras se usam aqui sem gastar ponto. Orbes se abrem em Capturar, no Início.</p>
-      <div class="items">${owned.length ? owned.map(([id, q]) => `<div class="item"><div><b>${esc(IT[id].n)} <span class="qty">×${q}</span></b><small>${esc(IT[id].d)}</small></div>${useable(id) ? `<button class="btn sm" data-use="${id}">Usar</button>` : `<span class="rchip">Orbe</span>`}</div>`).join("") : `<p class="muted">Mochila vazia.</p>`}</div>
+      <div class="items">${owned.length ? owned.map(([id, q]) => { const ic = itemIcon(id); return `<div class="item ${ic ? "hasimg" : ""}">${ic}<div><b>${esc(IT[id].n)} <span class="qty">×${q}</span></b><small>${esc(IT[id].d)}</small></div>${useable(id) ? `<button class="btn sm" data-use="${id}">Usar</button>` : ""}</div>`; }).join("") : `<p class="muted">Mochila vazia.</p>`}</div>
     </section>
   </div></div>`;
 }
@@ -2109,7 +2114,7 @@ function drawShop() {
   const groups = [["orbe", "Orbes"], ["cura", "Cura"], ["atributo", "Atributos (permanentes)"]];
   const keepScroll = $("#sheet .shopscroll") ? $("#sheet .shopscroll").scrollTop : 0;
   openSheet(`<div class="row between"><h2>Loja</h2><span class="pill money">${coinIcon(20)}${money(game.dinheiro)}</span></div>
-    <div class="shopscroll">${groups.map(([cat, label]) => `<p class="eyebrow">${label}</p><div class="items">${sale.filter(([, i]) => i.cat === cat).map(([id, i]) => `<div class="item"><div><b>${esc(i.n)} <span class="small muted">· ${money(i.price)} moedas</span></b><small>${esc(i.d)}${game.inv[id] ? ` · você tem ${game.inv[id]}` : ""}</small></div><button class="btn sm" data-buy="${id}" ${game.dinheiro >= i.price ? "" : "disabled"}>Comprar</button></div>`).join("")}</div>`).join("")}</div>
+    <div class="shopscroll">${groups.map(([cat, label]) => `<p class="eyebrow">${label}</p><div class="items">${sale.filter(([, i]) => i.cat === cat).map(([id, i]) => `<div class="item ${itemIcon(id) ? "hasimg" : ""}">${itemIcon(id)}<div><b>${esc(i.n)} <span class="small muted">· ${money(i.price)} moedas</span></b><small>${esc(i.d)}${game.inv[id] ? ` · você tem ${game.inv[id]}` : ""}</small></div><button class="btn sm" data-buy="${id}" ${game.dinheiro >= i.price ? "" : "disabled"}>Comprar</button></div>`).join("")}</div>`).join("")}</div>
     <div class="row"><button class="btn primary" id="leave">Sair da loja</button><button class="btn" id="keep">Fechar e voltar depois</button></div>`);
   shopLook();
   $("#sheet").classList.add("dentro");
