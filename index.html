@@ -511,6 +511,33 @@ select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid 
 #loginov .btn { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.28); }
 #loginov .btn.primary { background: #fff; color: #10201a; border-color: #fff; font-weight: 700; }
 #loginov .lskip { background: none; border: 0; color: rgba(255,255,255,.7); text-decoration: underline; padding: 6px; cursor: pointer; }
+
+/* Equipe: miniaturas, reserva e sacrifício em lote */
+.eqbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.seg { display: inline-flex; background: rgba(255,255,255,.14); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button { border: 0; background: transparent; color: inherit; padding: 7px 14px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; }
+.seg button.on { background: #fff; color: #14201b; }
+.seg small { opacity: .7; margin-left: 4px; }
+.mgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.mtile { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 10px; cursor: pointer; color: inherit; font: inherit; width: 100%; }
+.mtile .art { width: 72px; background: var(--soft); border-radius: 12px; }
+.mtile .mn { font-size: .98rem; line-height: 1.15; overflow-wrap: anywhere; }
+.mtile .ml { font-size: 12px; opacity: .8; }
+.mtile .bl { display: flex; align-items: center; gap: 6px; width: 100%; font-size: 10px; }
+.mtile .bl em { font-style: normal; width: 18px; text-align: left; opacity: .75; }
+.mtile .bl .hp, .mtile .bl .xp { display: block; flex: 1; margin: 0; }
+.mtile.down .art { filter: grayscale(1); opacity: .55; }
+.bgrp { display: grid; gap: 6px; margin-bottom: 10px; }
+.bgrp .eyebrow { margin: 6px 0 0; }
+.bulklist { max-height: 46vh; overflow-y: auto; margin: 6px 0; }
+.sheet.marcar .pick { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.22); color: #fff; }
+.sheet.marcar .pick small { color: rgba(255,255,255,.72); }
+.sheet.marcar .btn.danger { background: #c0392b; border-color: #c0392b; color: #fff; }
+.sheet.marcar .btn.danger:disabled { opacity: .45; }
+.pick.sel { border-color: #ff7a6b; background: rgba(255,90,70,.16); box-shadow: inset 0 0 0 1px #ff7a6b; }
+.sheet.marcar .pick.sel { border-color: #ff7a6b; background: rgba(255,90,70,.18); }
+.pick .ck { color: #ff9a8d; }
+.pick .ck { font-size: 12px; font-weight: 700; white-space: nowrap; }
 .rsec { padding: 14px; }
 .rsec + .rsec { margin-top: 12px; }
 .rhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -1351,7 +1378,7 @@ function tutSteps() {
     { id: "cap3", nomask: true, noskip: true, bubble: "top", say: "O orbe está tremendo…", wait: () => !!$("#sheet #done"), delay: 200 },
     { id: "cap4", say: () => `Você capturou um <b>${esc(SP[ultimoMon().sp].n)}</b>! Ele entra na sua equipe.`, target: () => $("#sheet #done"), wait: () => !sheetOpen() },
     { id: "eq1", say: "Para ver sua equipe, toque em <b>Equipe</b>.", target: () => tabBtn("equipe"), wait: () => tab === "equipe" },
-    { id: "eq2", ok: true, say: "Aqui estão seus monstrinhos: nível, vida (PV) e os atributos de cada um. Toque nos cartões para conferir.", target: () => $(".mon"), bubble: "bottom", pad: 8 },
+    { id: "eq2", ok: true, say: "Aqui estão seus monstrinhos: nível, vida (PV) e experiência (XP). Toque em um deles para ver os atributos e as ações. Os que não cabem na equipe ficam na <b>Reserva</b>.", target: () => $(".mgrid"), bubble: "bottom", pad: 8 },
     { id: "evo", mid: true, ok: true, say: "Os monstrinhos ganham experiência ao batalhar e sobem de nível. Quando chegam a um certo nível, ou cumprem outra condição (como usar uma pedra), eles <b>evoluem</b> e ficam mais fortes." },
     { id: "volta2", say: "Vamos capturar de novo. Volte ao <b>Início</b>.", target: () => tabBtn("inicio"), wait: () => tab === "inicio" },
     { id: "cap5", say: "Toque em <b>Capturar</b> outra vez.", target: () => $("#actOrb"), wait: () => sheetOpen() && !!$("#sheet [data-orb]") },
@@ -1359,8 +1386,8 @@ function tutSteps() {
     { id: "cap7", nomask: true, noskip: true, bubble: "top", say: "Tremendo…", wait: () => !!$("#sheet #done"), delay: 200 },
     { id: "cap8", say: () => `Veja só: outro <b>${esc(SP[ultimoMon().sp].n)}</b>, igual ao que você já tinha! Monstrinhos repetidos podem ser <b>sacrificados</b>.`, target: () => $("#sheet #done"), wait: () => !sheetOpen() },
     { id: "sac0", say: "Vá à aba <b>Equipe</b> para sacrificar o repetido.", target: () => tabBtn("equipe"), wait: () => tab === "equipe" },
-    { id: "sac1", say: "Toque em <b>Sacrificar</b>. Só dá para sacrificar <b>repetidos</b>: você sempre mantém pelo menos um de cada espécie. O repetido vira experiência para outro monstrinho.", target: () => $("[data-sac]"), wait: () => sheetOpen() && !!$("#sheet [data-pick]") },
-    { id: "sac2", say: "Escolha quem recebe a experiência.", target: () => $("#sheet [data-pick]"), ensure: () => { const d = game.mons.find(m => game.mons.filter(x => x.sp === m.sp).length > 1); if (d) sacrificeStart([d.id]); }, wait: () => !!$("#sheet #confirm") },
+    { id: "sac1", say: "Toque em <b>Sacrificar</b>: ele lista os monstrinhos repetidos. Você sempre mantém pelo menos um de cada espécie, e o repetido vira experiência para o que ficar.", target: () => $("#bulkSac"), wait: () => sheetOpen() && !!$("#sheet #bulkGo") },
+    { id: "sac2", say: "Já vem marcado o repetido de menor nível; dá para marcar ou desmarcar outros. Toque em <b>Sacrificar</b>.", target: () => $("#sheet #bulkGo"), ensure: () => bulkSacrifice(), wait: () => !!$("#sheet #confirm") },
     { id: "sac3", say: "Confirme o sacrifício.", target: () => $("#sheet #confirm"), wait: () => game.conq.sacrificios > 0 },
     { id: "sac4", say: "Pronto! Veja quanta experiência ele ganhou.", target: () => $("#sheet #done") || $("#sheet #skipLearn"), wait: () => !sheetOpen() },
     { id: "bat0", say: "Agora, a batalha! Volte ao <b>Início</b>.", target: () => tabBtn("inicio"), wait: () => tab === "inicio" },
@@ -1397,7 +1424,7 @@ const TOUR = [
   { tab: "inicio", t: "Batalhar contra treinadores", p: ["Cada rota tem treinadores. Toque em <b>Batalhar</b> para escolher o oponente. Custa 1 ponto de Exercício, e a luta é por turnos, com golpes, tipos e condições como queimadura e paralisia.", "Vencer dá moedas e experiência. Derrote todos os treinadores para liberar a próxima rota. O último é o líder e dá um item."] },
   { tab: "inicio", t: "Capturar monstrinhos", p: ["<b>Capturar</b> abre um orbe: custa 1 orbe e 1 ponto qualquer, e sorteia um monstrinho que vive na rota onde você está. Cada rota tem os seus.", "A cada semana (segunda a domingo) em que você ganha 5 pontos de cada tipo, vem um <b>Orbe Raro</b>, que favorece os monstrinhos mais difíceis de achar."] },
   { tab: "rotas", t: "Viajar entre rotas", p: ["Na aba <b>Rotas</b> você viaja para as rotas que já explorou e para a próxima. Mudar de rota custa 1 ponto de qualquer tipo."] },
-  { tab: "equipe", t: "Sua equipe", p: ["Leve até 6 monstrinhos; o primeiro entra na luta primeiro. Eles ganham experiência, sobem de nível, aprendem golpes e evoluem.", "A vida não volta sozinha: cure todos de uma vez com 1 ponto de Alimentação, ou um por um com itens."] },
+  { tab: "equipe", t: "Sua equipe", p: ["Leve até 6 monstrinhos; o primeiro entra na luta primeiro. Toque num monstrinho para ver os detalhes. Os que não cabem ficam na Reserva, e o botão Sacrificar transforma repetidos em experiência.", "A vida não volta sozinha: cure todos de uma vez com 1 ponto de Alimentação, ou um por um com itens."] },
   { tab: "mochila", t: "Loja e itens", p: ["Entrar na <b>loja</b> custa 1 ponto de Skincare. Lá dentro você compra, com moedas, orbes, poções, itens de atributo, manuais de golpe e pedras de evolução.", "O que você compra fica na Mochila e é usado nos monstrinhos."] },
   { tab: "colecao", t: "Coleção", p: ["Aqui ficam todas as espécies que você já encontrou. Monstrinhos repetidos podem ser <b>sacrificados</b> para dar experiência a outro (sempre sobra um de cada).", "Os lendários e os míticos são raros e viram conquistas."] },
   { tab: "calendario", t: "Calendário", p: ["Veja seu histórico de hábitos e a sequência de dias completos. Só hoje e ontem geram pontos; dias antigos ficam registrados."] },
@@ -1581,16 +1608,49 @@ function monCard(m, inParty) {
     </div>
   </div></article>`;
 }
+let eqAba = "equipe";
+const varSoma = m => (m.var || []).reduce((a, b) => a + b, 0);
+/* grupos de espécies repetidas (os míticos ficam de fora) */
+const dupGroups = () => D.species.map(sp => game.mons.filter(m => m.sp === sp.id && !m.mythic && sp.rar !== "mitico")).filter(l => l.length > 1);
+function miniMon(m) {
+  const mx = maxHp(m), p = clamp(m.hp / mx * 100, 0, 100), xp = m.lvl >= CFG.nivel_max ? 100 : Math.round(m.xp / need(m.lvl) * 100);
+  const lider = game.equipe[0] === m.id, estado = isDown(m) ? " · desmaiado" : m.cond ? " · " + COND_NAME[m.cond].toLowerCase() : "";
+  return `<button class="card mtile ${isDown(m) ? "down" : ""}" data-open="${m.id}" aria-label="${esc(SP[m.sp].n)}, nível ${m.lvl}. Toque para ver os detalhes">
+    ${art(m.sp)}<b class="mn">${esc(SP[m.sp].n)}</b><span class="ml">Nv ${m.lvl}${lider ? " · líder" : ""}${estado}</span>
+    <span class="bl"><em>PV</em><span class="hp"><i class="${p < 25 ? "low" : p < 50 ? "mid" : ""}" style="width:${p}%"></i></span></span>
+    <span class="bl"><em>XP</em><span class="xp"><i style="width:${xp}%"></i></span></span></button>`;
+}
 function viewEquipe() {
   if (!game.mons.length) return `<section class="card"><h2>Ainda sem monstrinhos</h2><p class="lead">Escolha seu parceiro no Início.</p></section>`;
   const p = partyMons(), res = reserveMons().sort((a, b) => b.lvl - a.lvl);
-  const hasDupes = D.species.some(s => game.mons.filter(m => m.sp === s.id && !m.mythic).length > 1);
+  const grupos = dupGroups(), sobras = grupos.reduce((a, l) => a + l.length - 1, 0);
   const nh = hurt().length;
+  const lista = eqAba === "reserva"
+    ? `<div class="row between" style="margin-bottom:10px"><h2>Reserva</h2><span class="small muted">${res.length} ${res.length === 1 ? "monstrinho" : "monstrinhos"} · toque para ver e pôr na equipe</span></div>
+       ${res.length ? `<div class="mgrid">${res.map(miniMon).join("")}</div>` : `<section class="card"><p class="lead" style="margin:0">Nenhum monstrinho na reserva. Os capturados que não cabem na equipe ficam aqui.</p></section>`}`
+    : `<div class="row between" style="margin-bottom:10px"><h2>Na equipe</h2><span class="small muted">${p.length} de ${CFG.equipe_max} · o líder entra primeiro</span></div>
+       <div class="mgrid">${p.map(miniMon).join("")}</div>`;
   return `<div class="col">
     <section class="card"><div class="row between"><div><h2 style="margin:0">Curar todos</h2><p class="small muted" style="margin:4px 0 0">${nh ? `${nh} ${nh === 1 ? "monstrinho precisa" : "monstrinhos precisam"} de cuidados. Recupera toda a vida e remove condições de todos.` : "Todos os monstrinhos estão saudáveis."}</p></div><button class="btn primary" id="healAll" ${nh && pts("alimentacao") ? "" : "disabled"}>Curar (1 ${ptIcon("alimentacao", 16)})</button></div></section>
-    <section><div class="row between" style="margin-bottom:10px"><h2>Na equipe</h2><span class="small muted">${p.length} de ${CFG.equipe_max} · o líder entra primeiro na batalha</span></div>
-    <div class="mons">${p.map(m => monCard(m, true)).join("")}</div></section>
+    <div class="eqbar"><div class="seg" role="tablist"><button id="eqTeam" role="tab" aria-selected="${eqAba === "equipe"}" class="${eqAba === "equipe" ? "on" : ""}">Equipe<small>${p.length}/${CFG.equipe_max}</small></button><button id="eqRes" role="tab" aria-selected="${eqAba === "reserva"}" class="${eqAba === "reserva" ? "on" : ""}">Reserva<small>${res.length}</small></button></div>
+      <button class="btn" id="bulkSac" ${grupos.length ? "" : "disabled"} title="${grupos.length ? "Escolher os repetidos a sacrificar" : "Você não tem monstrinhos repetidos"}">Sacrificar${sobras ? ` (${sobras})` : ""}</button></div>
+    <section>${lista}</section>
   </div>`;
+}
+/* Menu completo de um monstrinho (aberto ao tocar na miniatura) */
+function monSheet(id) {
+  const m = getMon(id); if (!m) return;
+  const inParty = game.equipe.includes(id);
+  openSheet(`<div class="row between"><h2>Detalhes</h2><button class="btn sm" id="cancel">Fechar</button></div>${monCard(m, inParty).replace('class="card mon"', 'class="mon"')}`);
+  $("#sheet").classList.add("marcar");
+  $("#cancel").onclick = closeSheet;
+  const on = (sel, fn) => { const el = $("#sheet " + sel); if (el) el.onclick = fn; };
+  const feito = msg => { saveGame(); closeSheet(); if (msg) toast(msg); };
+  on("[data-out]", () => { game.equipe = game.equipe.filter(x => x !== id); feito(`${SP[m.sp].n} foi para a reserva.`); });
+  on("[data-lead]", () => { game.equipe = [id, ...game.equipe.filter(x => x !== id)]; feito("Novo líder da equipe."); });
+  on("[data-in]", () => { if (game.equipe.length < CFG.equipe_max) game.equipe.push(id); feito(`${SP[m.sp].n} entrou na equipe.`); });
+  on("[data-star]", () => { game.destaque = id; feito("Destaque atualizado."); });
+  on("[data-sac]", () => sacrificeStart([id]));
 }
 function viewMochila() {
   const owned = Object.entries(game.inv).filter(([id, q]) => q > 0 && IT[id]);
@@ -1719,6 +1779,7 @@ function viewCalendario() {
 
 /* ======================= eventos ======================= */
 function bind() {
+  const g = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
   $$("input[data-day]").forEach(inp => inp.onchange = () => {
     const k = inp.dataset.day;
     if (k > todayKey()) { inp.checked = false; return; }   /* dias futuros não podem ser marcados */
@@ -1732,14 +1793,12 @@ function bind() {
   $$("[data-goto]").forEach(b => b.onclick = () => setTab(b.dataset.goto));
   const omb = $("#openMap"); if (omb) omb.onclick = openMap;
   $$("[data-go]").forEach(b => b.onclick = () => askMove(+b.dataset.go));
-  $$("[data-in]").forEach(b => b.onclick = () => { game.equipe.push(+b.dataset.in); saveGame(); render(); });
-  $$("[data-out]").forEach(b => b.onclick = () => { game.equipe = game.equipe.filter(id => id !== +b.dataset.out); saveGame(); render(); });
-  $$("[data-lead]").forEach(b => b.onclick = () => { const id = +b.dataset.lead; game.equipe = [id, ...game.equipe.filter(x => x !== id)]; saveGame(); render(); });
+  $$("[data-open]").forEach(b => b.onclick = () => monSheet(+b.dataset.open));
+  g("eqTeam", () => { eqAba = "equipe"; render(); });
+  g("eqRes", () => { eqAba = "reserva"; render(); });
   const ha = $("#healAll"); if (ha) ha.onclick = healAll;
-  $$("[data-sac]").forEach(b => b.onclick = () => sacrificeStart([+b.dataset.sac]));
   $$("[data-use]").forEach(b => b.onclick = () => useItemStart(b.dataset.use));
   $$("[data-date]").forEach(b => b.onclick = () => { calSel = new Date(b.dataset.date + "T00:00"); render(); });
-  const g = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
   g("prev", () => { calView = new Date(calView.getFullYear(), calView.getMonth() - 1, 1); render(); });
   g("next", () => { calView = new Date(calView.getFullYear(), calView.getMonth() + 1, 1); render(); });
   g("todayBtn", () => { const t = todayDate(); calView = new Date(t.getFullYear(), t.getMonth(), 1); calSel = t; render(); });
@@ -1748,7 +1807,6 @@ function bind() {
     habits[k] = { ...(habits[k] || {}), [h]: !(habits[k] || {})[h] };
     creditPoints(); render(); writeHabit(k);
   });
-  $$("[data-star]").forEach(b => b.onclick = () => { game.destaque = +b.dataset.star; saveGame(); render(); toast("Destaque atualizado."); });
   g("goRoutes", () => setTab("rotas"));
   g("goShop", openShop);
   g("tourBtn", helpMenu);
@@ -1764,7 +1822,7 @@ function bind() {
   g("actOrb", askOrb);
   g("actShop", openShop);
   g("openShop2", openShop);
-  g("bulkSac", bulkSacrifice);
+  g("bulkSac", () => bulkSacrifice());
 }
 function setTab(t) { tab = t; writeLS(LS_TAB, t); render(); window.scrollTo({ top: 0 }); }
 $$(".nb").forEach(b => b.onclick = () => setTab(b.dataset.tab));
@@ -2099,9 +2157,9 @@ function teachMove(id, mv, m) {
 }
 
 /* ======================= sacrifício ======================= */
+const xpOf = v => Math.round(CFG.sacrificio_fator * v.lvl * ((RAR[SP[v.sp].rar] || {}).mult || 1));
 function sacrificeStart(ids) {
   const victims = ids.map(getMon).filter(Boolean);
-  const xpOf = v => Math.round(CFG.sacrificio_fator * v.lvl * ((RAR[SP[v.sp].rar] || {}).mult || 1));
   const total = victims.reduce((a, v) => a + xpOf(v), 0);
   picker("Quem recebe a experiência?", `${victims.length === 1 ? `Sacrificar ${esc(SP[victims[0].sp].n)} (Nv ${victims[0].lvl})` : `Sacrificar ${victims.length} monstrinhos`} dá ${money(total)} de experiência.`, target => {
     const lv = previewXP(target, total);
@@ -2124,21 +2182,62 @@ function sacrificeStart(ids) {
     };
   }, m => !ids.includes(m.id));
 }
-function bulkSacrifice() {
-  const sel = [];
-  D.species.forEach(s => {
-    const ms = game.mons.filter(m => m.sp === s.id && !m.mythic && s.rar !== "mitico").sort((a, b) => (b.var.reduce((x, y) => x + y, 0) - a.var.reduce((x, y) => x + y, 0)) || b.lvl - a.lvl);
-    ms.slice(1).forEach(m => sel.push(m.id));
-  });
+/* Sacrificar repetidos: lista todas as cópias de espécies repetidas; já marca a de menor nível de cada espécie; o jogador ajusta e confirma.
+   A experiência vai automaticamente para a cópia de maior nível que ficar de cada espécie (ou o jogador escolhe quem recebe). */
+function bulkSacrifice(pre) {
+  const grupos = dupGroups();
+  if (!grupos.length) return toast("Você não tem monstrinhos repetidos.");
+  const noTime = m => game.equipe.includes(m.id) ? 1 : 0;
+  const sel = new Set((pre || []).filter(id => getMon(id)));
+  if (!sel.size) grupos.forEach(l => sel.add(l.slice().sort((a, b) => a.lvl - b.lvl || varSoma(a) - varSoma(b) || noTime(a) - noTime(b))[0].id));
+  const linha = m => { const on = sel.has(m.id); return `<button class="pick ${on ? "sel" : ""}" data-tog="${m.id}" aria-pressed="${on}">${art(m.sp)}<span><b>${esc(SP[m.sp].n)}</b><small>Nv ${m.lvl} · ${game.equipe.includes(m.id) ? "na equipe" : "reserva"}${m.nbonus ? ` · ${m.nbonus} ${m.nbonus === 1 ? "item" : "itens"}` : ""}</small></span><span class="ck">${on ? "sacrificar" : ""}</span></button>`; };
   const draw = () => {
-    openSheet(`<h2>Sacrificar repetidos fracos</h2><p class="muted">Selecionei os repetidos, mantendo o melhor de cada espécie (maior soma de variação individual). Toque para tirar ou pôr na lista.</p>
-      <div class="picker">${game.mons.filter(m => game.mons.filter(x => x.sp === m.sp).length > 1 && !m.mythic).map(m => monRow(m, "data-tog").replace('class="pick"', `class="pick ${sel.includes(m.id) ? "sel" : ""}"`)).join("")}</div>
-      <div class="row"><button class="btn primary" id="go" ${sel.length ? "" : "disabled"}>Continuar com ${sel.length}</button><button class="btn" id="cancel">Cancelar</button></div>`);
-    $$("[data-tog]").forEach(b => b.onclick = () => { const id = +b.dataset.tog; const i = sel.indexOf(id); if (i >= 0) sel.splice(i, 1); else { const sp = getMon(id).sp; const keep = game.mons.filter(m => m.sp === sp && !sel.includes(m.id) && m.id !== id); if (keep.length) sel.push(id); else toast("Fica pelo menos um de cada espécie."); } draw(); });
-    $("#go").onclick = () => sacrificeStart(sel.slice());
+    const keep = $("#sheet .bulklist") ? $("#sheet .bulklist").scrollTop : 0;
+    openSheet(`<div class="row between"><h2>Sacrificar repetidos</h2><button class="btn sm" id="cancel">Fechar</button></div>
+      <p class="small muted" style="margin:0">Já marquei o de menor nível de cada espécie. Toque para marcar ou desmarcar: sempre sobra pelo menos um de cada. A experiência vai para a cópia de maior nível que ficar.</p>
+      <div class="bulklist">${grupos.map(l => `<div class="bgrp"><p class="eyebrow">${esc(SP[l[0].sp].n)} · ${l.length} cópias</p>${l.slice().sort((a, b) => b.lvl - a.lvl).map(linha).join("")}</div>`).join("")}</div>
+      <div class="row"><button class="btn danger" id="bulkGo" ${sel.size ? "" : "disabled"}>Sacrificar ${sel.size}</button><button class="btn" id="bulkPick" ${sel.size ? "" : "disabled"}>Escolher quem recebe o XP</button></div>`);
+    $("#sheet").classList.add("marcar");
+    if ($("#sheet .bulklist")) $("#sheet .bulklist").scrollTop = keep;
+    $$("[data-tog]").forEach(b => b.onclick = () => {
+      const id = +b.dataset.tog, sp = getMon(id).sp;
+      if (sel.has(id)) sel.delete(id);
+      else if (game.mons.some(m => m.sp === sp && m.id !== id && !sel.has(m.id))) sel.add(id);
+      else toast("Fica pelo menos um de cada espécie.");
+      draw();
+    });
+    $("#bulkGo").onclick = () => bulkConfirm([...sel]);
+    $("#bulkPick").onclick = () => sacrificeStart([...sel]);
     $("#cancel").onclick = closeSheet;
   };
   draw();
+}
+function bulkConfirm(ids) {
+  const victims = ids.map(getMon).filter(Boolean), plano = new Map();
+  for (const v of victims) {
+    const resto = game.mons.filter(m => m.sp === v.sp && !ids.includes(m.id)).sort((a, b) => b.lvl - a.lvl || varSoma(b) - varSoma(a));
+    if (!resto.length) return toast("Fica pelo menos um de cada espécie.");
+    plano.set(resto[0].id, (plano.get(resto[0].id) || 0) + xpOf(v));
+  }
+  const alvos = [...plano].map(([id, xp]) => ({ t: getMon(id), xp }));
+  openSheet(`<h2>Confirmar sacrifício</h2>
+    <div class="picker">${victims.map(v => monRow(v, "data-x")).join("")}</div>
+    ${alvos.map(a => `<p style="margin:4px 0">${esc(SP[a.t.sp].n)} (Nv ${a.t.lvl}) ganha <b>${money(a.xp)}</b> de experiência: nível ${a.t.lvl} → <b>${previewXP(a.t, a.xp)}</b>.</p>`).join("")}
+    <p class="small muted">Os sacrificados saem do jogo, junto com os itens de atributo que receberam. Isso não pode ser desfeito.</p>
+    <div class="row"><button class="btn danger" id="confirm">Sacrificar ${victims.length}</button><button class="btn" id="cancel">Voltar</button></div>`);
+  $("#sheet").classList.add("marcar");
+  $$("[data-x]").forEach(b => b.disabled = true);
+  $("#cancel").onclick = () => bulkSacrifice(ids);
+  $("#confirm").onclick = () => {
+    victims.forEach(v => { game.mons = game.mons.filter(m => m.id !== v.id); game.equipe = game.equipe.filter(id => id !== v.id); });
+    if (!game.equipe.length) game.equipe.push(alvos[0].t.id);
+    game.conq.sacrificios += victims.length;
+    const out = [{ t: victims.length === 1 ? "1 monstrinho foi sacrificado." : `${victims.length} monstrinhos foram sacrificados.` }];
+    for (const a of alvos) { out.push({ t: `${SP[a.t.sp].n} ganhou ${money(a.xp)} de experiência.` }); applyXP(a.t, a.xp, out, learnQueue); }
+    checkMythics(out);
+    addLog(victims.length === 1 ? `${SP[victims[0].sp].n} foi sacrificado.` : `${victims.length} monstrinhos foram sacrificados.`);
+    saveGame(); showResults("Sacrifício feito", out);
+  };
 }
 
 /* ======================= batalha ======================= */
