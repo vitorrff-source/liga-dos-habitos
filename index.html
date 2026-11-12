@@ -515,7 +515,8 @@ select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid 
 #loginov .lskip { background: none; border: 0; color: rgba(255,255,255,.7); text-decoration: underline; padding: 6px; cursor: pointer; }
 
 /* Equipe: miniaturas, reserva e sacrifício em lote */
-.eqbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.eqbar { display: flex; gap: 8px; align-items: center; }
+.eqbar .btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .seg { display: inline-flex; background: rgba(255,255,255,.14); border-radius: 999px; padding: 3px; gap: 2px; }
 .seg button { border: 0; background: transparent; color: inherit; padding: 7px 14px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; }
 .seg button.on { background: #fff; color: #14201b; }
@@ -1632,8 +1633,8 @@ function viewEquipe() {
   const grupos = dupGroups(), sobras = grupos.reduce((a, l) => a + l.length - 1, 0);
   const nh = hurt().length;
   return `<div class="col">
-    <section class="card"><div class="row between"><div><h2 style="margin:0">Curar todos</h2><p class="small muted" style="margin:4px 0 0">${nh ? `${nh} ${nh === 1 ? "monstrinho precisa" : "monstrinhos precisam"} de cuidados. Recupera toda a vida e remove condições de todos.` : "Todos os monstrinhos estão saudáveis."}</p></div><button class="btn primary" id="healAll" ${nh && pts("alimentacao") ? "" : "disabled"}>Curar (1 ${ptIcon("alimentacao", 16)})</button></div></section>
-    <div class="eqbar"><button class="btn" id="eqRes">Reserva${res.length ? ` (${res.length})` : ""}</button>
+    <div class="eqbar"><button class="btn" id="healAll" ${nh && pts("alimentacao") ? "" : "disabled"} title="${nh ? (pts("alimentacao") ? "Cura todos os monstrinhos (1 ponto de Alimentação)" : "Sem pontos de Alimentação") : "Todos os monstrinhos estão saudáveis"}">Curar ${ptIcon("alimentacao", 16)}</button>
+      <button class="btn" id="eqRes">Reserva${res.length ? ` (${res.length})` : ""}</button>
       <button class="btn" id="bulkSac" ${grupos.length ? "" : "disabled"} title="${grupos.length ? "Escolher os repetidos a sacrificar" : "Você não tem monstrinhos repetidos"}">Sacrificar${sobras ? ` (${sobras})` : ""}</button></div>
     <div class="mgrid">${p.map(miniMon).join("")}</div>
   </div>`;
